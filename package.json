@@ -19,7 +19,6 @@
   ],
   "husky": {
     "hooks": {
-      "pre-commit": "yarn prettier:write && yarn lint && git add ."
     }
   },
   "devDependencies": {
