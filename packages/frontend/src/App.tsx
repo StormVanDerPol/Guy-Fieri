@@ -1,12 +1,10 @@
 import React from "react";
-import { Container, Draggable } from "./components/draggable";
+import { Desktop } from "./components/templeOs";
 
 export default function App() {
   return (
     <div>
-      <Container>
-        <Draggable></Draggable>
-      </Container>
+      <Desktop />
     </div>
   );
 }
