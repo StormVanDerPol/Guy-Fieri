@@ -1,3 +1,3 @@
 export { default as useUniqueKey } from "./useUniqueKey";
-export { default as useWindows } from "./useWindows";
-export { default as useDraggable, Position } from "./useDraggable";
+export { default as useWindows, useWindowsTypes } from "./useWindows";
+export { default as useJankDrag, Position, DraggableType } from "./useJankDrag";

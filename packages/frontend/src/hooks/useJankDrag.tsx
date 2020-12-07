@@ -14,54 +14,36 @@ export type Position = {
 
 type InputEvent = MouseEvent & TouchEvent;
 
-export type Draggable = HTMLElement & {
+export type DraggableType = HTMLElement & {
   initialPosition: Position;
   currentPosition: Position;
-};
-
-export type SnapConfig = {
-  enabled?: boolean;
-  gridSize?: { width: number; height: number };
-  gridSpacing?: { width: number; height: number };
-  transition?: string;
 };
 
 type useDraggableConfig = {
   initialPosition?: Position;
   orderZIndex?: boolean;
-  snapConfig?: SnapConfig;
 };
 
-const DraggablesContext = createContext<Draggable[]>([]);
+const DraggablesContext = createContext<DraggableType[]>([]);
 
 /**
  * A hook that returns a ref object which when attached to a node makes it draggable
  * @returns ref, active, position, setPosition
  * @property {Position} initialPosition
  * @property {boolean} orderZIndex order by z-index on position change.
- *
- * -- snap config --
- * @property {boolean} enabled
- * @property {width: number, height: number} gridSize
- * @property {width: number, height: number} gridSpacing
- * @property {string} transition
  */
 
-const useDraggable = ({
-  initialPosition,
-  orderZIndex,
-  snapConfig,
-}: useDraggableConfig) => {
+const useJankDrag = ({ initialPosition, orderZIndex }: useDraggableConfig) => {
   const draggables = useContext(DraggablesContext);
 
-  const [draggable, setDraggable] = useState<Draggable>(null);
+  const [draggable, setDraggable] = useState<DraggableType>(null);
   const [lastPosition, setLastPosition] = useState<Position>(
     initialPosition || { x: 0, y: 0 }
   );
   const [active, setActive] = useState<boolean>(false);
 
   const callbackRef = useCallback(
-    (node: Draggable): void => setDraggable(node),
+    (node: DraggableType): void => setDraggable(node),
     []
   );
 
@@ -85,36 +67,6 @@ const useDraggable = ({
     draggable.style.zIndex = (
       Math.max(...draggables.map((d) => Number(d.style.zIndex))) + 1
     ).toString();
-  };
-  const snapToGrid = (): void => {
-    if (!snapConfig?.enabled) return;
-
-    const { gridSize, gridSpacing, transition } = snapConfig;
-
-    const endPosition: Position = {
-      x:
-        Math.round(draggable.currentPosition.x / gridSize?.width || 1) *
-        ((gridSize?.width || 1) + (gridSpacing?.width || 0)),
-      y:
-        Math.round(draggable.currentPosition.y / gridSize?.height || 1) *
-        ((gridSize?.height || 1) + (gridSpacing?.height || 0)),
-    };
-
-    setTransform(endPosition);
-
-    if (!transition) {
-      setLastPosition(endPosition);
-      return;
-    }
-
-    draggable.style.transition = transition;
-
-    const endTransition = () => {
-      setLastPosition(endPosition);
-      draggable.style.transition = null;
-      draggable.removeEventListener("transitionend", endTransition);
-    };
-    draggable.addEventListener("transitionend", endTransition);
   };
 
   useEffect((): void => {
@@ -192,12 +144,10 @@ const useDraggable = ({
 
     const handleDragEnd = (): void => {
       setActive(false);
-      snapToGrid();
-      if (!snapConfig?.enabled)
-        setLastPosition({
-          x: draggable.currentPosition.x,
-          y: draggable.currentPosition.y,
-        });
+      setLastPosition({
+        x: draggable.currentPosition.x,
+        y: draggable.currentPosition.y,
+      });
     };
 
     if (active && window) {
@@ -218,7 +168,13 @@ const useDraggable = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, setTransform, draggable]);
 
-  return { ref: callbackRef, active, position: lastPosition, setPosition };
+  return {
+    ref: callbackRef,
+    active,
+    lastPosition,
+    setPosition,
+    node: draggable,
+  };
 };
 
-export default useDraggable;
+export default useJankDrag;
